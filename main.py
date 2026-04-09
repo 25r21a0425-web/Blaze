@@ -188,7 +188,7 @@ async def panel(ctx):
 @bot.command()
 async def ask(ctx, *, question):
     try:
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-2.0-flash")
         response = model.generate_content(question)
 
         embed = discord.Embed(
