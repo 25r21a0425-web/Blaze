@@ -3,10 +3,7 @@ from discord.ext import commands
 from discord.ui import Button, View
 import json
 import os
-import google.generativeai as genai
-
-# ---------------- GEMINI AI SETUP ----------------
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+import random
 
 # ---------------- BOT SETUP ----------------
 intents = discord.Intents.default()
@@ -18,9 +15,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 FILES = {
     "tasks": "tasks.json",
     "attendance": "attendance.json",
-    "sessions": "sessions.json",
-    "users": "users.json",
-    "forms": "forms.json"
+    "sessions": "sessions.json"
 }
 
 # Create files if not exist
@@ -67,15 +62,10 @@ async def tasks(ctx):
     user = str(ctx.author.id)
 
     if user not in data or len(data[user]) == 0:
-        embed = discord.Embed(
-            title="📭 No Tasks",
-            description="You have no tasks.",
-            color=0xe74c3c
-        )
-        await ctx.send(embed=embed)
+        await ctx.send("📭 You have no tasks.")
         return
 
-    msg = "\n".join([f"**{i+1}.** {t}" for i, t in enumerate(data[user])])
+    msg = "\n".join([f"{i+1}. {t}" for i, t in enumerate(data[user])])
 
     embed = discord.Embed(
         title="📋 Your Tasks",
@@ -93,12 +83,7 @@ async def mark(ctx):
     data[user] = data.get(user, 0) + 1
     save_data(FILES["attendance"], data)
 
-    embed = discord.Embed(
-        title="✅ Attendance Marked",
-        description="Your attendance recorded.",
-        color=0xf1c40f
-    )
-    await ctx.send(embed=embed)
+    await ctx.send("✅ Attendance marked")
 
 @bot.command()
 async def attendance(ctx):
@@ -106,13 +91,7 @@ async def attendance(ctx):
     user = str(ctx.author.id)
 
     count = data.get(user, 0)
-
-    embed = discord.Embed(
-        title="📊 Attendance",
-        description=f"Total: **{count}**",
-        color=0x9b59b6
-    )
-    await ctx.send(embed=embed)
+    await ctx.send(f"📊 Attendance: {count}")
 
 # ---------------- STUDY SESSION ----------------
 @bot.command()
@@ -123,12 +102,7 @@ async def startsession(ctx):
     data[user] = "active"
     save_data(FILES["sessions"], data)
 
-    embed = discord.Embed(
-        title="📚 Session Started",
-        description="Focus mode ON 🔥",
-        color=0x1abc9c
-    )
-    await ctx.send(embed=embed)
+    await ctx.send("📚 Session started! Stay focused 🔥")
 
 @bot.command()
 async def endsession(ctx):
@@ -142,12 +116,7 @@ async def endsession(ctx):
     data[user] = "ended"
     save_data(FILES["sessions"], data)
 
-    embed = discord.Embed(
-        title="⏱️ Session Ended",
-        description="Great work 🎉",
-        color=0xe67e22
-    )
-    await ctx.send(embed=embed)
+    await ctx.send("⏱️ Session ended. Good job 🎉")
 
 # ---------------- BUTTON PANEL ----------------
 @bot.command()
@@ -184,23 +153,73 @@ async def panel(ctx):
 
     await ctx.send("🎛️ Control Panel:", view=view)
 
-# ---------------- GEMINI AI COMMAND ----------------
+# ---------------- SMART DEMO AI ----------------
 @bot.command()
 async def ask(ctx, *, question):
-    try:
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        response = model.generate_content(question)
+    q = question.lower()
 
-        embed = discord.Embed(
-            title="🤖 AI Assistant",
-            description=response.text,
-            color=0x5865F2
-        )
+    greetings = [
+        "Hey there! 👋 How can I help you today?",
+        "Hi! 😊 What would you like to know?",
+        "Hello! I'm here to help you with anything."
+    ]
 
-        await ctx.send(embed=embed)
+    time_responses = [
+        "Time is fascinating—it's how we measure change from past to future.",
+        "In physics, time is considered the fourth dimension along with space.",
+        "You can think of time as a continuous flow that moves everything forward."
+    ]
 
-    except Exception as e:
-        await ctx.send(f"Error: {e}")
+    blackhole_responses = [
+        "A black hole is a region in space where gravity is so strong that nothing can escape.",
+        "They form when massive stars collapse into extremely dense objects.",
+        "Black holes are one of the most mysterious phenomena in the universe!"
+    ]
+
+    study_responses = [
+        "Try focusing in short intervals like 25 minutes, then take breaks.",
+        "Consistency is more important than long hours—stay regular.",
+        "Avoid distractions and create a clean study environment."
+    ]
+
+    ai_responses = [
+        "AI stands for Artificial Intelligence—machines that can think and learn.",
+        "It's about building systems that solve problems like humans.",
+        "You're currently interacting with a simulated AI system 😉"
+    ]
+
+    default_responses = [
+        "That's an interesting question! Let me think...",
+        "Hmm, that connects to multiple concepts.",
+        "Good question! It involves deeper understanding.",
+        "I like that question—it shows curiosity!"
+    ]
+
+    if any(word in q for word in ["hello", "hi", "hey"]):
+        answer = random.choice(greetings)
+
+    elif "time" in q:
+        answer = random.choice(time_responses)
+
+    elif "black hole" in q:
+        answer = random.choice(blackhole_responses)
+
+    elif "study" in q or "focus" in q:
+        answer = random.choice(study_responses)
+
+    elif "ai" in q:
+        answer = random.choice(ai_responses)
+
+    else:
+        answer = random.choice(default_responses) + " It relates to science, logic, or general knowledge."
+
+    embed = discord.Embed(
+        title="🤖 AI Assistant",
+        description=answer,
+        color=0x5865F2
+    )
+
+    await ctx.send(embed=embed)
 
 # ---------------- RUN BOT ----------------
 TOKEN = os.getenv("TOKEN")
